@@ -76,7 +76,7 @@ List<RegExpMatch> allMatches(String input, [int start = 0]);
 
 /// Returns a list of the matches found in [input].
 List<RegExpMatch> getMatches(String input, {
-  int start = 0, int stop, bool reverse = true,
+  int start = 0, int stop, bool reverse = false,
 });
 
 /// Returns `true` if [input] contains a match, otherwise returns `false`.
@@ -89,7 +89,7 @@ String stringMatch(String input);
 
 /// Returns the list of substring matches found in [input].
 List<String> stringMatches(String input, {
-  int start = 0, int stop, bool reverse = true,
+  int start = 0, int stop, bool reverse = false,
 });
 
 /// Match the delimited pattern against the start of [string].
