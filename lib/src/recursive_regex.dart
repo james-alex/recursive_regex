@@ -241,6 +241,14 @@ class RecursiveRegex implements RegExp {
   }
 
   /// Returns the list of substring matches found in [input].
+  ///
+  /// [start] and [stop] refer to the indexes of the delimited blocks
+  /// of text. Only matches found between [start] and [stop] will be
+  /// returned.
+  ///
+  /// [start] must not be `null` and must be `>= 0`.
+  ///
+  /// [stop] may be `null` and must be `>= start`.
   List<String> stringMatches(
     String input, {
     int start = 0,
@@ -264,7 +272,10 @@ class RecursiveRegex implements RegExp {
         ?.toList();
   }
 
-  /// Match the delimited pattern against the start of [string].
+  /// Match the delimited pattern against the [string] at
+  /// the position of [start].
+  ///
+  /// [start] must not be null and must be `>= 0`.
   @override
   Match matchAsPrefix(String string, [int start = 0]) {
     assert(string != null);
