@@ -297,6 +297,9 @@ class RecursiveRegex implements RegExp {
   final bool isDotAll;
 
   /// Returns a copy of [RecursiveRegex], updating any values provided by this.
+  ///
+  /// If [copyNull] is `true`, [captureGroupName] will be copied with a
+  /// value of `null` if it is not provided with another value.
   RecursiveRegex copyWith({
     RegExp startDelimiter,
     RegExp endDelimiter,
@@ -306,17 +309,23 @@ class RecursiveRegex implements RegExp {
     bool isUnicode,
     bool isDotAll,
     bool global,
-  }) =>
-      RecursiveRegex(
-        startDelimiter: startDelimiter ?? this.startDelimiter,
-        endDelimiter: endDelimiter ?? this.endDelimiter,
-        captureGroupName: captureGroupName ?? this.captureGroupName,
-        isMultiLine: isMultiLine ?? this.isMultiLine,
-        isCaseSensitive: isCaseSensitive ?? this.isCaseSensitive,
-        isUnicode: isUnicode ?? this.isUnicode,
-        isDotAll: isDotAll ?? this.isDotAll,
-        global: global ?? this.global,
-      );
+    bool copyNull = false,
+  }) {
+    assert(copyNull != null);
+
+    if (!copyNull) captureGroupName ??= this.captureGroupName;
+
+    return RecursiveRegex(
+      startDelimiter: startDelimiter ?? this.startDelimiter,
+      endDelimiter: endDelimiter ?? this.endDelimiter,
+      captureGroupName: captureGroupName,
+      isMultiLine: isMultiLine ?? this.isMultiLine,
+      isCaseSensitive: isCaseSensitive ?? this.isCaseSensitive,
+      isUnicode: isUnicode ?? this.isUnicode,
+      isDotAll: isDotAll ?? this.isDotAll,
+      global: global ?? this.global,
+    );
+  }
 
   // Returns a list of every delimiter in the order of their occurance.
   List<_Delimiter> _getDelimiters(String input) {
