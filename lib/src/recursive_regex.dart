@@ -322,9 +322,9 @@ class RecursiveRegex implements RegExp {
       ..removeWhere((RegExpMatch endDelimiter) =>
           endDelimiter.start < startDelimiters.first.start);
 
-    if (startDelimiters.length < endDelimiters.length) {
+    if (startDelimiters.length > endDelimiters.length) {
       startDelimiters = startDelimiters.sublist(0, endDelimiters.length);
-    } else if (endDelimiters.length < startDelimiters.length) {
+    } else if (endDelimiters.length > startDelimiters.length) {
       endDelimiters = endDelimiters.sublist(0, startDelimiters.length);
     }
 
