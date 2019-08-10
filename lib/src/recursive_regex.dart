@@ -203,9 +203,9 @@ class RecursiveRegex implements RegExp {
           final String match = getMatch(startDelimiter, endDelimiter);
 
           matches.add(regExp.firstMatch(match));
-        }
 
-        index++;
+          index++;
+        }
 
         if (stop != null && index > stop) break;
       }
