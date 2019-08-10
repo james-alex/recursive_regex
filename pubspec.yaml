@@ -2,7 +2,7 @@ name: recursive_regex
 description: >-
   An implementation of RegExp that isolates delimited blocks of
   text and applies the pattern to each block separately.
-version: 0.1.0+2
+version: 0.1.1
 author: James Alexander <j.alex@email.com>
 homepage: https://github.com/james-alex/recursive_regex
 
