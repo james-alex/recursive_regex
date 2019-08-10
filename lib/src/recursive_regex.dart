@@ -70,8 +70,8 @@ class RecursiveRegex implements RegExp {
   @override
   String get pattern {
     final String captureGroup = (captureGroupName != null)
-        ? '(?<$captureGroupName>(?:.|\n)*)'
-        : '(?:.|\n)*';
+        ? '(?<$captureGroupName>(?:.|\\n)*)'
+        : '(?:.|\\n)*';
 
     return '${startDelimiter.pattern}$captureGroup${endDelimiter.pattern}';
   }
