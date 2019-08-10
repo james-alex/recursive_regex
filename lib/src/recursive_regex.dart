@@ -182,34 +182,28 @@ class RecursiveRegex implements RegExp {
 
     String getMatch(RegExpMatch start, RegExpMatch end) =>
         _clean(input.substring(0, start.start)) +
-        input.substring(start.start, end.end) +
-        _clean(input.substring(end.end));
+        input.substring(start.start, end.end);
 
     final List<_Delimiter> openDelimiters = List<_Delimiter>();
 
-    for (int i = (reverse) ? delimiters.length - 1 : 0;
-        (reverse) ? (i >= 0) : (i < delimiters.length);
-        (reverse) ? i-- : i++) {
-      final _Delimiter delimiter = delimiters[i];
-
+    for (_Delimiter delimiter in (reverse) ? delimiters.reversed : delimiters) {
       if ((!reverse && delimiter.position == _DelimiterPosition.start) ||
           (reverse && delimiter.position == _DelimiterPosition.end)) {
         openDelimiters.add(delimiter);
         continue;
       }
 
-      if (global ||
-          (openDelimiters.length == 1 &&
-              index >= start &&
-              (stop == null || index <= stop))) {
-        final RegExpMatch startDelimiter =
-            (reverse) ? delimiter.match : openDelimiters.last.match;
-        final RegExpMatch endDelimiter =
-            (reverse) ? openDelimiters.last.match : delimiter.match;
+      if (global || openDelimiters.length == 1) {
+        if (index >= start && (stop == null || index <= stop)) {
+          final RegExpMatch startDelimiter =
+              (reverse) ? delimiter.match : openDelimiters.last.match;
+          final RegExpMatch endDelimiter =
+              (reverse) ? openDelimiters.last.match : delimiter.match;
 
-        final String match = getMatch(startDelimiter, endDelimiter);
+          final String match = getMatch(startDelimiter, endDelimiter);
 
-        matches.add(regExp.firstMatch(match));
+          matches.add(regExp.firstMatch(match));
+        }
 
         index++;
 
