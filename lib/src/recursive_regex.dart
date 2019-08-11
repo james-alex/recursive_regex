@@ -80,7 +80,6 @@ class RecursiveRegex implements RegExp {
 
   /// The [RegExp] applied delimited blocks of text.
   RegExp get regExp => RegExp(
-      // TODO: Try using escape
         pattern,
         multiLine: isMultiLine,
         caseSensitive: isCaseSensitive,
