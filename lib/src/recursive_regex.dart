@@ -69,15 +69,18 @@ class RecursiveRegex implements RegExp {
   /// text if used with a [RegExp].
   @override
   String get pattern {
-    final String captureGroup = (captureGroupName != null)
-        ? '(?<$captureGroupName>(?:.|\\n)*)'
-        : '(?:.|\\n)*';
+    String captureGroup = (isDotAll) ? r'.*' : r'(?:.|\s)*';
+
+    if (captureGroupName != null) {
+      captureGroup = '(?<$captureGroupName>' + captureGroup + ')';
+    }
 
     return '${startDelimiter.pattern}$captureGroup${endDelimiter.pattern}';
   }
 
   /// The [RegExp] applied delimited blocks of text.
   RegExp get regExp => RegExp(
+      // TODO: Try using escape
         pattern,
         multiLine: isMultiLine,
         caseSensitive: isCaseSensitive,
