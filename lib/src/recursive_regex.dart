@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 
 /// An implementation of [RegExp] that isolates delimited blocks of
 /// text and applies the delimiter pattern to each block separately.
+@immutable
 class RecursiveRegex implements RegExp {
   /// An implementation of [RegExp] that isolates delimited blocks of
   /// text and applies the delimiter pattern to each block separately.
@@ -69,10 +70,10 @@ class RecursiveRegex implements RegExp {
   /// text if used with a [RegExp].
   @override
   String get pattern {
-    String captureGroup = (isDotAll) ? r'.*' : r'(?:.|\s)*';
+    var captureGroup = (isDotAll) ? r'.*' : r'(?:.|\s)*';
 
     if (captureGroupName != null) {
-      captureGroup = '(?<$captureGroupName>' + captureGroup + ')';
+      captureGroup = '(?<$captureGroupName>$captureGroup)';
     }
 
     return '${startDelimiter.pattern}$captureGroup${endDelimiter.pattern}';
@@ -168,11 +169,11 @@ class RecursiveRegex implements RegExp {
     assert(stop == null || stop >= start);
     assert(reverse != null);
 
-    final List<RegExpMatch> matches = List<RegExpMatch>();
+    final matches = <RegExpMatch>[];
 
-    int index = 0;
+    var index = 0;
 
-    final List<_Delimiter> delimiters = _getDelimiters(input);
+    final delimiters = _getDelimiters(input);
 
     if (delimiters == null) return null;
 
@@ -186,9 +187,9 @@ class RecursiveRegex implements RegExp {
         _clean(input.substring(0, start.start)) +
         input.substring(start.start, end.end);
 
-    final List<_Delimiter> openDelimiters = List<_Delimiter>();
+    final openDelimiters = <_Delimiter>[];
 
-    for (_Delimiter delimiter in (reverse) ? delimiters.reversed : delimiters) {
+    for (var delimiter in (reverse) ? delimiters.reversed : delimiters) {
       if ((!reverse && delimiter.position == _DelimiterPosition.start) ||
           (reverse && delimiter.position == _DelimiterPosition.end)) {
         openDelimiters.add(delimiter);
@@ -197,12 +198,12 @@ class RecursiveRegex implements RegExp {
 
       if (global || openDelimiters.length == 1) {
         if (index >= start && (stop == null || index <= stop)) {
-          final RegExpMatch startDelimiter =
+          final startDelimiter =
               (reverse) ? delimiter.match : openDelimiters.last.match;
-          final RegExpMatch endDelimiter =
+          final endDelimiter =
               (reverse) ? openDelimiters.last.match : delimiter.match;
 
-          final String match = getMatch(startDelimiter, endDelimiter);
+          final match = getMatch(startDelimiter, endDelimiter);
 
           matches.add(regExp.firstMatch(match));
         }
@@ -231,7 +232,7 @@ class RecursiveRegex implements RegExp {
   String stringMatch(String input) {
     assert(input != null);
 
-    final RegExpMatch match = firstMatch(input);
+    final match = firstMatch(input);
 
     return input.substring(match.start, match.end);
   }
@@ -256,7 +257,7 @@ class RecursiveRegex implements RegExp {
     assert(stop == null || stop >= start);
     assert(reverse != null);
 
-    final List<RegExpMatch> matches = getMatches(
+    final matches = getMatches(
       input,
       start: start,
       stop: stop,
@@ -264,7 +265,7 @@ class RecursiveRegex implements RegExp {
     );
 
     return matches
-        ?.map((RegExpMatch match) => input.substring(match.start, match.end))
+        ?.map((match) => input.substring(match.start, match.end))
         ?.toList();
   }
 
@@ -329,14 +330,13 @@ class RecursiveRegex implements RegExp {
 
     if (!input.contains(startDelimiter)) return null;
 
-    List<RegExpMatch> startDelimiters =
-        startDelimiter.allMatches(input).toList();
+    var startDelimiters = startDelimiter.allMatches(input).toList();
 
     if (!input.contains(endDelimiter)) return null;
 
-    List<RegExpMatch> endDelimiters = endDelimiter.allMatches(input).toList()
-      ..removeWhere((RegExpMatch endDelimiter) =>
-          endDelimiter.start < startDelimiters.first.start);
+    var endDelimiters = endDelimiter.allMatches(input).toList()
+      ..removeWhere(
+          (endDelimiter) => endDelimiter.start < startDelimiters.first.start);
 
     if (startDelimiters.length > endDelimiters.length) {
       startDelimiters = startDelimiters.sublist(0, endDelimiters.length);
@@ -355,7 +355,7 @@ class RecursiveRegex implements RegExp {
   }
 
   @override
-  operator ==(o) =>
+  bool operator ==(Object o) =>
       o is RecursiveRegex &&
       startDelimiter == o.startDelimiter &&
       endDelimiter == o.endDelimiter &&
@@ -395,16 +395,15 @@ class _Delimiter {
     assert(end != null);
     assert(start.length == end.length);
 
-    final List<_Delimiter> delimiters = List<_Delimiter>();
+    final delimiters = <_Delimiter>[];
 
-    delimiters.addAll(start.map((RegExpMatch delimiter) =>
-        _Delimiter(_DelimiterPosition.start, delimiter)));
+    delimiters.addAll(start
+        .map((delimiter) => _Delimiter(_DelimiterPosition.start, delimiter)));
 
-    delimiters.addAll(end.map((RegExpMatch delimiter) =>
-        _Delimiter(_DelimiterPosition.end, delimiter)));
+    delimiters.addAll(
+        end.map((delimiter) => _Delimiter(_DelimiterPosition.end, delimiter)));
 
-    delimiters.sort(
-        (_Delimiter a, _Delimiter b) => a.match.start.compareTo(b.match.start));
+    delimiters.sort((a, b) => a.match.start.compareTo(b.match.start));
 
     return delimiters;
   }

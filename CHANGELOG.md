@@ -1,3 +1,7 @@
+## [0.1.3+1] - January 16, 2020
+
+* Formatting changes
+
 ## [0.1.1 - 0.1.3] - August 10, 2019
 
 * Bug fixes

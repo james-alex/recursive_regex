@@ -2,8 +2,7 @@ name: recursive_regex
 description: >-
   An implementation of RegExp that isolates delimited blocks of
   text and applies the pattern to each block separately.
-version: 0.1.3
-author: James Alexander <j.alex@email.com>
+version: 0.1.3+1
 homepage: https://github.com/james-alex/recursive_regex
 
 environment:
@@ -14,3 +13,4 @@ dependencies:
 
 dev_dependencies:
   test: ^1.6.5
+  effective_dart: ^1.0.0

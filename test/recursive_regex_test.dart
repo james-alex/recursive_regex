@@ -3,9 +3,9 @@ import 'package:recursive_regex/recursive_regex.dart';
 
 void main() {
   test('Nested Matches', () {
-    final String input = '<a<b<c><d<e>>><f>>';
+    final input = '<a<b<c><d<e>>><f>>';
 
-    final RecursiveRegex regex = RecursiveRegex(
+    final regex = RecursiveRegex(
       startDelimiter: RegExp(r'<'),
       endDelimiter: RegExp(r'>'),
     );
@@ -14,13 +14,13 @@ void main() {
 
     expect(regex.stringMatch(input), equals(input));
 
-    final RecursiveRegex globalRegex = regex.copyWith(global: true);
+    final globalRegex = regex.copyWith(global: true);
 
-    final List<RegExpMatch> matches = globalRegex.allMatches(input);
+    final matches = globalRegex.allMatches(input);
 
     expect(matches.length, equals(6));
 
-    final List<String> expectedMatches = <String>[
+    final expectedMatches = <String>[
       '<c>',
       '<e>',
       '<d<e>>',
@@ -29,11 +29,11 @@ void main() {
       input,
     ];
 
-    matches.forEach((RegExpMatch match) {
+    for (var match in matches) {
       expect(input.substring(match.start, match.end),
           equals(expectedMatches.first));
 
       expectedMatches.removeAt(0);
-    });
+    }
   });
 }
