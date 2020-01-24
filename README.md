@@ -1,5 +1,8 @@
 # recursive_regex
 
+[![pub package](https://img.shields.io/pub/v/recursive_regex.svg)](https://pub.dartlang.org/packages/recursive_regex)
+[![style: effective dart](https://img.shields.io/badge/style-effective_dart-40c4ff.svg)](https://github.com/tenhobi/effective_dart)
+
 An implementation of Dart's RegExp class that isolates delimited blocks
 of text and applies the delimited pattern to each block separately.
 
