@@ -19,7 +19,7 @@ class RecursiveRegex implements RegExp {
   ///
   /// [isCaseSensitive] is `true` by default and must not be `null`.
   ///
-  /// If [global] is `true`, every delimited block of text, nested
+  /// If [global] is `true`, every delimited block of text, nested or
   /// not, will be matched. If `false`, only the top-level blocks of
   /// delimited text will be matched.
   ///
@@ -39,7 +39,9 @@ class RecursiveRegex implements RegExp {
     this.global = false,
   })  : assert(startDelimiter != null),
         assert(endDelimiter != null),
-        assert(startDelimiter.pattern != endDelimiter.pattern),
+        assert((startDelimiter is String && startDelimiter != endDelimiter) ||
+            (startDelimiter is RegExp && endDelimiter is RegExp &&
+                startDelimiter.pattern != endDelimiter.pattern)),
         assert(captureGroupName == null || captureGroupName.length > 1),
         assert(isMultiLine != null),
         assert(isCaseSensitive != null),
@@ -48,14 +50,26 @@ class RecursiveRegex implements RegExp {
         assert(global != null);
 
   /// The opening delimiter.
-  final RegExp startDelimiter;
+  final Pattern startDelimiter;
 
   /// The closing delimiter.
-  final RegExp endDelimiter;
+  final Pattern endDelimiter;
 
   /// If not `null`, the block of text captured within the
   /// delimiters will be captured in a group named this.
   final String captureGroupName;
+
+  @override
+  final bool isMultiLine;
+
+  @override
+  final bool isCaseSensitive;
+
+  @override
+  final bool isUnicode;
+
+  @override
+  final bool isDotAll;
 
   /// If `true`, every block of delimited text, nested or not,
   /// will be matched. If `false`, only top-level blocks of
@@ -76,10 +90,17 @@ class RecursiveRegex implements RegExp {
       captureGroup = '(?<$captureGroupName>$captureGroup)';
     }
 
-    return '${startDelimiter.pattern}$captureGroup${endDelimiter.pattern}';
+    final startDelimiter = this.startDelimiter is RegExp
+        ? (this.startDelimiter as RegExp).pattern
+        : this.startDelimiter;
+    final endDelimiter = this.endDelimiter is RegExp
+        ? (this.endDelimiter as RegExp).pattern
+        : this.endDelimiter;
+
+    return '$startDelimiter$captureGroup$endDelimiter';
   }
 
-  /// The [RegExp] applied delimited blocks of text.
+  /// The [RegExp] applied to delimited blocks of text.
   RegExp get regExp => RegExp(
         pattern,
         multiLine: isMultiLine,
@@ -280,18 +301,6 @@ class RecursiveRegex implements RegExp {
 
     return pattern.matchAsPrefix(string, start);
   }
-
-  @override
-  final bool isMultiLine;
-
-  @override
-  final bool isCaseSensitive;
-
-  @override
-  final bool isUnicode;
-
-  @override
-  final bool isDotAll;
 
   /// Returns a copy of [RecursiveRegex], updating any values provided by this.
   ///
