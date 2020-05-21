@@ -1,4 +1,6 @@
 import 'package:meta/meta.dart';
+import './helpers/delimiter.dart';
+import './helpers/utils.dart';
 
 /// An implementation of [RegExp] that isolates delimited blocks of
 /// text and applies the delimiter pattern to each block separately.
@@ -10,14 +12,26 @@ class RecursiveRegex implements RegExp {
   /// [startDelimiter] and [endDelimiter] are required, must not be
   /// `null`, and must not be identical to each other.
   ///
+  /// If [prepended] and/or [appended] are not `null`, all matched sets
+  /// of delimiters will be validated to be preceded and/or followed by
+  /// the values of [prepended] and/or [appended] respectively. All matched
+  /// sets of delimiters that do not match the prepended and/or appended
+  /// patterns will be excluded from the returned [RegExpMatch]es.
+  ///
+  /// __Note:__ If [RegExp]s are provided as any of the [startDelimiter],
+  /// [endDelimiter], [prepended], or [appended] values their [multiLine],
+  /// [caseSensitive], [unicode], and [dotAll] parameters will be ignored.
+  /// All patterns contained within those [RegExp]s are rebuilt with the
+  /// parameters provided to this constructor.
+  ///
   /// If [captureGroupName] is not `null` the block of text captured
   /// between the delimiters will be captured in a group named it.
   /// [captureGroupName] must be a least 1 character long if not `null`.
   ///
-  /// [isMultiline], [isUnicode], and [isDotAll] are all `false` by
+  /// [multiLine], [unicode], and [dotAll] are all `false` by
   /// default and must not be `null`.
   ///
-  /// [isCaseSensitive] is `true` by default and must not be `null`.
+  /// [caseSensitive] is `true` by default and must not be `null`.
   ///
   /// If [global] is `true`, every delimited block of text, nested or
   /// not, will be matched. If `false`, only the top-level blocks of
@@ -31,11 +45,13 @@ class RecursiveRegex implements RegExp {
   RecursiveRegex({
     @required this.startDelimiter,
     @required this.endDelimiter,
+    this.prepended,
+    this.appended,
     this.captureGroupName,
-    this.isMultiLine = false,
-    this.isCaseSensitive = true,
-    this.isUnicode = false,
-    this.isDotAll = false,
+    bool multiLine = false,
+    bool caseSensitive = true,
+    bool unicode = false,
+    bool dotAll = false,
     this.global = false,
   })  : assert(startDelimiter != null),
         assert(endDelimiter != null),
@@ -43,17 +59,40 @@ class RecursiveRegex implements RegExp {
             (startDelimiter is RegExp && endDelimiter is RegExp &&
                 startDelimiter.pattern != endDelimiter.pattern)),
         assert(captureGroupName == null || captureGroupName.length > 1),
-        assert(isMultiLine != null),
-        assert(isCaseSensitive != null),
-        assert(isUnicode != null),
-        assert(isDotAll != null),
-        assert(global != null);
+        assert(multiLine != null),
+        assert(caseSensitive != null),
+        assert(unicode != null),
+        assert(dotAll != null),
+        assert(global != null),
+        isMultiLine = multiLine,
+        isCaseSensitive = caseSensitive,
+        isUnicode = unicode,
+        isDotAll = dotAll;
 
   /// The opening delimiter.
   final Pattern startDelimiter;
+  String get _startDelimiter => _getPattern(startDelimiter);
 
   /// The closing delimiter.
   final Pattern endDelimiter;
+  String get _endDelimiter => _getPattern(endDelimiter);
+
+  /// A [Pattern] expected to precede [startDelimiter].
+  ///
+  /// Any [startDelimiter]s that are not preceded by [prepended] will not be
+  /// matched, but will still be accounted for in the nesting order.
+  final Pattern prepended;
+  String get _prepended => _getPattern(prepended);
+
+  /// A [Pattern] expected to follow [endDelimiter].
+  ///
+  /// Any [endDelimiter]s that are not followed by [appended] will not be
+  /// matched, but will still be accounted for in the nesting order.
+  final Pattern appended;
+  String get _appended => _getPattern(appended);
+
+  /// Returns [input]'s pattern as a [String].
+  String _getPattern(Pattern input) => input is RegExp ? input.pattern : input;
 
   /// If not `null`, the block of text captured within the
   /// delimiters will be captured in a group named this.
@@ -90,18 +129,19 @@ class RecursiveRegex implements RegExp {
       captureGroup = '(?<$captureGroupName>$captureGroup)';
     }
 
-    final startDelimiter = this.startDelimiter is RegExp
-        ? (this.startDelimiter as RegExp).pattern
-        : this.startDelimiter;
-    final endDelimiter = this.endDelimiter is RegExp
-        ? (this.endDelimiter as RegExp).pattern
-        : this.endDelimiter;
+    var pattern = '$_startDelimiter$captureGroup$_endDelimiter';
 
-    return '$startDelimiter$captureGroup$endDelimiter';
+    if (prepended != null) pattern = '$_prepended$pattern';
+    if (appended != null) pattern = '$pattern$appended';
+
+    return pattern;
   }
 
   /// The [RegExp] applied to delimited blocks of text.
-  RegExp get regExp => RegExp(
+  RegExp get regExp => _buildRegExp(pattern);
+
+  /// Builds a [RegExp] with `this` object's specified parameters.
+  RegExp _buildRegExp(String pattern) => RegExp(
         pattern,
         multiLine: isMultiLine,
         caseSensitive: isCaseSensitive,
@@ -204,15 +244,15 @@ class RecursiveRegex implements RegExp {
       return regExp.allMatches(input).toList();
     }
 
-    String getMatch(RegExpMatch start, RegExpMatch end) =>
-        _clean(input.substring(0, start.start)) +
+    String getMatch(Match start, Match end) =>
+        clean(input.substring(0, start.start)) +
         input.substring(start.start, end.end);
 
-    final openDelimiters = <_Delimiter>[];
+    final openDelimiters = <Delimiter>[];
 
     for (var delimiter in (reverse) ? delimiters.reversed : delimiters) {
-      if ((!reverse && delimiter.position == _DelimiterPosition.start) ||
-          (reverse && delimiter.position == _DelimiterPosition.end)) {
+      if ((!reverse && delimiter.position == DelimiterPosition.start) ||
+          (reverse && delimiter.position == DelimiterPosition.end)) {
         openDelimiters.add(delimiter);
         continue;
       }
@@ -325,16 +365,16 @@ class RecursiveRegex implements RegExp {
       startDelimiter: startDelimiter ?? this.startDelimiter,
       endDelimiter: endDelimiter ?? this.endDelimiter,
       captureGroupName: captureGroupName,
-      isMultiLine: isMultiLine ?? this.isMultiLine,
-      isCaseSensitive: isCaseSensitive ?? this.isCaseSensitive,
-      isUnicode: isUnicode ?? this.isUnicode,
-      isDotAll: isDotAll ?? this.isDotAll,
+      multiLine: isMultiLine ?? this.isMultiLine,
+      caseSensitive: isCaseSensitive ?? this.isCaseSensitive,
+      unicode: isUnicode ?? this.isUnicode,
+      dotAll: isDotAll ?? this.isDotAll,
       global: global ?? this.global,
     );
   }
 
   // Returns a list of every delimiter in the order of their occurance.
-  List<_Delimiter> _getDelimiters(String input) {
+  List<Delimiter> _getDelimiters(String input) {
     assert(input != null);
 
     if (!input.contains(startDelimiter)) return null;
@@ -353,14 +393,95 @@ class RecursiveRegex implements RegExp {
       endDelimiters = endDelimiters.sublist(0, startDelimiters.length);
     }
 
-    return _Delimiter.fromLists(startDelimiters, endDelimiters);
+    var delimiters = Delimiter.fromLists(startDelimiters, endDelimiters);
+
+    if (delimiters.isEmpty) return delimiters;
+
+    if (prepended != null) {
+      delimiters = _checkAndUnmatch(input, delimiters);
+    }
+
+    if (appended != null) {
+      delimiters = _checkAndUnmatch(input, delimiters, inverse: true);
+    }
+
+    return delimiters;
   }
 
-  /// Replaces every character that's not a newline with a space.
-  static String _clean(String input) {
-    assert(input != null);
+  /// Checks the delimiters for the [prepended] or [appended] patterns and
+  /// unmatches the delimiters that are not adjoined by the pattern.
+  List<Delimiter> _checkAndUnmatch(
+    String input,
+    List<Delimiter> delimiters, {
+    bool inverse = false,
+  }) {
+    assert(delimiters != null);
+    assert(inverse != null);
 
-    return input.replaceAll(RegExp('.'), ' ');
+    final unmatchedDelimiters = <Delimiter>[];
+
+    final removeDelimiters = <int>[];
+
+    var lastDelimiterPosition = inverse ? input.length : 0;
+
+    for (var delimiter in inverse ? delimiters.reversed : delimiters) {
+      if ((!inverse && delimiter.position == DelimiterPosition.start) ||
+          (inverse && delimiter.position == DelimiterPosition.end)) {
+        if (removeDelimiters.isNotEmpty) {
+          for (var j = 0; j < removeDelimiters.length; j++) {
+            removeDelimiters[j]++;
+          }
+        }
+
+        final slice = inverse
+            ? input.substring(delimiter.match.start, lastDelimiterPosition)
+            : input.substring(lastDelimiterPosition, delimiter.match.end);
+
+        final pattern = inverse
+            ? _buildRegExp('$_endDelimiter$_appended')
+            : _buildRegExp('$_prepended$_startDelimiter');
+
+        // If the [slice] matches the [pattern], update the delimiter's [Match]
+        // to include the appended/prepended pattern.
+        if (inverse ? slice.startsWith(pattern) : endsWith(slice, pattern)) {
+          final matches = pattern.allMatches(input);
+
+          final position = inverse
+              ? delimiter.match.start
+              : delimiter.match.end;
+
+          for (var match in matches) {
+            if (inverse ? match.start == position : match.end == position) {
+              delimiters[delimiters.indexOf(delimiter)].match = match;
+              break;
+            }
+          }
+        // Otherwise, queue the delimiter and it's corresponding
+        // start/end delimiter to be removed after the loop.
+        } else {
+          unmatchedDelimiters.add(delimiter);
+          removeDelimiters.add(0);
+        }
+      } else if (removeDelimiters.isNotEmpty) {
+        for (var j = 0; j < removeDelimiters.length; j++) {
+          if (removeDelimiters[j] == 0) {
+            unmatchedDelimiters.add(delimiter);
+            delimiters.remove(0);
+          }
+
+          removeDelimiters[j]--;
+        }
+      }
+
+      lastDelimiterPosition =
+          inverse ? delimiter.match.start : delimiter.match.end;
+    }
+
+    if (unmatchedDelimiters.isNotEmpty) {
+      unmatchedDelimiters.forEach(delimiters.remove);
+    }
+
+    return delimiters;
   }
 
   @override
@@ -383,37 +504,4 @@ class RecursiveRegex implements RegExp {
       isCaseSensitive.hashCode ^
       isUnicode.hashCode ^
       isDotAll.hashCode;
-}
-
-enum _DelimiterPosition { start, end }
-
-class _Delimiter {
-  const _Delimiter(this.position, this.match)
-      : assert(position != null),
-        assert(match != null);
-
-  final _DelimiterPosition position;
-
-  final RegExpMatch match;
-
-  static List<_Delimiter> fromLists(
-    List<RegExpMatch> start,
-    List<RegExpMatch> end,
-  ) {
-    assert(start != null);
-    assert(end != null);
-    assert(start.length == end.length);
-
-    final delimiters = <_Delimiter>[];
-
-    delimiters.addAll(start
-        .map((delimiter) => _Delimiter(_DelimiterPosition.start, delimiter)));
-
-    delimiters.addAll(
-        end.map((delimiter) => _Delimiter(_DelimiterPosition.end, delimiter)));
-
-    delimiters.sort((a, b) => a.match.start.compareTo(b.match.start));
-
-    return delimiters;
-  }
 }
