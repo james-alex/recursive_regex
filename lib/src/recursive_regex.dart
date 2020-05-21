@@ -18,11 +18,10 @@ class RecursiveRegex implements RegExp {
   /// sets of delimiters that do not match the prepended and/or appended
   /// patterns will be excluded from the returned [RegExpMatch]es.
   ///
-  /// __Note:__ If [RegExp]s are provided as any of the [startDelimiter],
-  /// [endDelimiter], [prepended], or [appended] values their [multiLine],
-  /// [caseSensitive], [unicode], and [dotAll] parameters will be ignored.
-  /// All patterns contained within those [RegExp]s are rebuilt with the
-  /// parameters provided to this constructor.
+  /// __Note:__ [startDelimiter], [endDelimiter], [prepended], or [appended]
+  /// are set as [RegExp]s, their [multiLine], [caseSensitive], [unicode], and
+  /// [dotAll] parameters will be ignored. All patterns contained within those
+  /// [RegExp]s are rebuilt with this constructor's equivalent parameters.
   ///
   /// If [captureGroupName] is not `null` the block of text captured
   /// between the delimiters will be captured in a group named it.
