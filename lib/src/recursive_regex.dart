@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
 import './helpers/delimiter.dart';
-import './helpers/utils.dart';
+import 'helpers/string_utilities.dart' as utils;
 
 /// An implementation of [RegExp] that isolates delimited blocks of
 /// text and applies the delimiter pattern to each block separately.
@@ -244,7 +244,7 @@ class RecursiveRegex implements RegExp {
     }
 
     String getMatch(Match start, Match end) =>
-        clean(input.substring(0, start.start)) +
+        input.substring(0, start.start).clean() +
         input.substring(start.start, end.end);
 
     final openDelimiters = <Delimiter>[];
