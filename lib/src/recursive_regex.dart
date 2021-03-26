@@ -487,10 +487,11 @@ class RecursiveRegex implements RegExp {
         for (var j = 0; j < removeDelimiters.length; j++) {
           if (removeDelimiters[j] == 0) {
             unmatchedDelimiters.add(delimiter);
+            removeDelimiters.removeAt(0);
+            break;
           }
           removeDelimiters[j]--;
         }
-        if (removeDelimiters.first == 0) removeDelimiters.removeAt(0);
       }
 
       lastDelimiterPosition =
