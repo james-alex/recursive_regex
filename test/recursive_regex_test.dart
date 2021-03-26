@@ -36,4 +36,40 @@ void main() {
       expectedMatches.removeAt(0);
     }
   });
+
+  test('Appended & Prepended Values', () {
+    final input =
+        'Test { void update { false } Test { /* Test { /* */ } Test */ false Test { } Test } true } test { test }';
+
+    final prepended = RecursiveRegex(
+      startDelimiter: '{',
+      endDelimiter: '}',
+      prepended: 'Test ',
+      global: true,
+    );
+
+    final prependedMatches = prepended.allMatches(input);
+    expect(prependedMatches.length, equals(4));
+
+    final appended = RecursiveRegex(
+      startDelimiter: '{',
+      endDelimiter: '}',
+      appended: ' Test',
+      global: true,
+    );
+
+    final appendedMatches = appended.allMatches(input);
+    expect(appendedMatches.length, equals(3));
+
+    final both = RecursiveRegex(
+      startDelimiter: '{',
+      endDelimiter: '}',
+      prepended: 'Test ',
+      appended: ' Test',
+      global: true,
+    );
+
+    final bothMatches = both.allMatches(input);
+    expect(bothMatches.length, equals(2));
+  });
 }
