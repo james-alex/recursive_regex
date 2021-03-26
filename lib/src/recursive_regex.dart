@@ -493,7 +493,7 @@ class RecursiveRegex implements RegExp {
           }
           removeDelimiters[j]--;
         }
-        removeDelimiters.removeWhere((value) => value <= 0);
+        if (removeDelimiters.first == 0) removeDelimiters.removeAt(0);
       }
 
       lastDelimiterPosition =
