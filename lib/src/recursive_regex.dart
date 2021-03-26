@@ -91,7 +91,9 @@ class RecursiveRegex implements RegExp {
   String get _appended => _getPattern(appended);
 
   /// Returns [input]'s pattern as a [String].
-  String _getPattern(Pattern input) => input is RegExp ? input.pattern : input;
+  String _getPattern(Pattern input) => input is String
+      ? _escapePattern(input).pattern
+      : (input as RegExp).pattern;
 
   /// If not `null`, the block of text captured within the
   /// delimiters will be captured in a group named this.
@@ -131,7 +133,7 @@ class RecursiveRegex implements RegExp {
     var pattern = '$_startDelimiter$captureGroup$_endDelimiter';
 
     if (prepended != null) pattern = '$_prepended$pattern';
-    if (appended != null) pattern = '$pattern$appended';
+    if (appended != null) pattern = '$pattern$_appended';
 
     return pattern;
   }
@@ -401,7 +403,7 @@ class RecursiveRegex implements RegExp {
     }
 
     if (appended != null) {
-      delimiters = _checkAndUnmatch(input, delimiters, inverse: true);
+      delimiters = _checkAndUnmatch(input, delimiters, appended: true);
     }
 
     return delimiters;
@@ -412,51 +414,50 @@ class RecursiveRegex implements RegExp {
   List<Delimiter> _checkAndUnmatch(
     String input,
     List<Delimiter> delimiters, {
-    bool inverse = false,
+    bool appended = false,
   }) {
     assert(delimiters != null);
-    assert(inverse != null);
+    assert(appended != null);
 
     final unmatchedDelimiters = <Delimiter>[];
-
     final removeDelimiters = <int>[];
 
-    var lastDelimiterPosition = inverse ? input.length : 0;
+    var lastDelimiterPosition = appended ? input.length : 0;
 
-    for (var delimiter in inverse ? delimiters.reversed : delimiters) {
-      if ((!inverse && delimiter.position == DelimiterPosition.start) ||
-          (inverse && delimiter.position == DelimiterPosition.end)) {
+    for (var delimiter in appended ? delimiters.reversed : delimiters) {
+      if ((!appended && delimiter.position == DelimiterPosition.start) ||
+          (appended && delimiter.position == DelimiterPosition.end)) {
         if (removeDelimiters.isNotEmpty) {
           for (var j = 0; j < removeDelimiters.length; j++) {
             removeDelimiters[j]++;
           }
         }
 
-        final slice = inverse
+        final slice = appended
             ? input.substring(delimiter.match.start, lastDelimiterPosition)
             : input.substring(lastDelimiterPosition, delimiter.match.end);
 
-        final pattern = inverse
+        final pattern = appended
             ? _buildRegExp('$_endDelimiter$_appended')
             : _buildRegExp('$_prepended$_startDelimiter');
 
         // If the [slice] matches the [pattern], update the delimiter's [Match]
         // to include the appended/prepended pattern.
-        if (inverse ? slice.startsWith(pattern) : endsWith(slice, pattern)) {
+        if (appended
+            ? slice.startsWith(pattern)
+            : slice.endsWithPattern(pattern)) {
           final matches = pattern.allMatches(input);
 
-          final position = inverse
-              ? delimiter.match.start
-              : delimiter.match.end;
+          final position =
+              appended ? delimiter.match.start : delimiter.match.end;
 
           for (var match in matches) {
-            if (inverse ? match.start == position : match.end == position) {
-              delimiters[delimiters.indexOf(delimiter)].match = match;
-              break;
+            if (appended ? match.start == position : match.end == position) {
+              delimiters[delimiters.indexOf(delimiter)].match = match;              break;
             }
           }
-        // Otherwise, queue the delimiter and it's corresponding
-        // start/end delimiter to be removed after the loop.
+          // Otherwise, queue the delimiter and it's corresponding
+          // start/end delimiter to be removed after the loop.
         } else {
           unmatchedDelimiters.add(delimiter);
           removeDelimiters.add(0);
@@ -465,15 +466,14 @@ class RecursiveRegex implements RegExp {
         for (var j = 0; j < removeDelimiters.length; j++) {
           if (removeDelimiters[j] == 0) {
             unmatchedDelimiters.add(delimiter);
-            delimiters.remove(0);
           }
-
           removeDelimiters[j]--;
         }
+        removeDelimiters.removeWhere((value) => value <= 0);
       }
 
       lastDelimiterPosition =
-          inverse ? delimiter.match.start : delimiter.match.end;
+          appended ? delimiter.match.start : delimiter.match.end;
     }
 
     if (unmatchedDelimiters.isNotEmpty) {
