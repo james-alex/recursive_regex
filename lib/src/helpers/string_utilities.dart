@@ -4,7 +4,6 @@ extension StringUtilities on String {
 
   /// Returns `true` if [input] ends with [pattern], otherwise returns `false`.
   bool endsWithPattern(Pattern pattern) {
-    assert(pattern != null);
     if (!contains(pattern)) return false;
     final match = pattern.allMatches(this).last;
     if (match.end == length) return true;

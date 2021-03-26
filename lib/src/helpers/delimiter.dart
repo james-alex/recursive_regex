@@ -12,9 +12,7 @@ class Delimiter {
   /// A delimiter matched in a [String].
   ///
   /// [position] and [match] both must not be `null`.
-  Delimiter(this.position, this.match)
-      : assert(position != null),
-        assert(match != null);
+  Delimiter(this.position, this.match);
 
   /// The type of delimiter (opening or closing.)
   final DelimiterPosition position;
@@ -28,8 +26,6 @@ class Delimiter {
     List<Match> start,
     List<Match> end,
   ) {
-    assert(start != null);
-    assert(end != null);
     assert(start.length == end.length);
 
     final delimiters = <Delimiter>[];

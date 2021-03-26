@@ -45,8 +45,8 @@ class RecursiveRegex implements RegExp {
   /// your matches to start at the beginning of and end at the length of
   /// the inputted string.
   RecursiveRegex({
-    @required this.startDelimiter,
-    @required this.endDelimiter,
+    required this.startDelimiter,
+    required this.endDelimiter,
     this.inverseMatch,
     this.prepended,
     this.appended,
@@ -56,18 +56,11 @@ class RecursiveRegex implements RegExp {
     bool unicode = false,
     bool dotAll = false,
     this.global = false,
-  })  : assert(startDelimiter != null),
-        assert(endDelimiter != null),
-        assert((startDelimiter is String && startDelimiter != endDelimiter) ||
+  })  : assert((startDelimiter is String && startDelimiter != endDelimiter) ||
             (startDelimiter is RegExp &&
                 endDelimiter is RegExp &&
                 startDelimiter.pattern != endDelimiter.pattern)),
         assert(captureGroupName == null || captureGroupName.length > 1),
-        assert(multiLine != null),
-        assert(caseSensitive != null),
-        assert(unicode != null),
-        assert(dotAll != null),
-        assert(global != null),
         isMultiLine = multiLine,
         isCaseSensitive = caseSensitive,
         isUnicode = unicode,
@@ -83,21 +76,21 @@ class RecursiveRegex implements RegExp {
 
   /// If provided, only matches that match this [Pattern] and aren't
   /// delimited will be matched by this regex.
-  final Pattern inverseMatch;
+  final Pattern? inverseMatch;
 
   /// A [Pattern] expected to precede [startDelimiter].
   ///
   /// Any [startDelimiter]s that are not preceded by [prepended] will not be
   /// matched, but will still be accounted for in the nesting order.
-  final Pattern prepended;
-  String get _prepended => _getPattern(prepended);
+  final Pattern? prepended;
+  String get _prepended => _getPattern(prepended!);
 
   /// A [Pattern] expected to follow [endDelimiter].
   ///
   /// Any [endDelimiter]s that are not followed by [appended] will not be
   /// matched, but will still be accounted for in the nesting order.
-  final Pattern appended;
-  String get _appended => _getPattern(appended);
+  final Pattern? appended;
+  String get _appended => _getPattern(appended!);
 
   /// Returns [input]'s pattern as a [String].
   String _getPattern(Pattern input) => input is String
@@ -106,7 +99,7 @@ class RecursiveRegex implements RegExp {
 
   /// If not `null`, the block of text captured within the
   /// delimiters will be captured in a group named this.
-  final String captureGroupName;
+  final String? captureGroupName;
 
   @override
   final bool isMultiLine;
@@ -160,11 +153,8 @@ class RecursiveRegex implements RegExp {
       );
 
   @override
-  RegExpMatch firstMatch(String input) {
-    assert(input != null);
-
-    return getMatches(input, start: 0, stop: 0)?.first;
-  }
+  RegExpMatch? firstMatch(String input) =>
+      getMatches(input, start: 0, stop: 0)?.first;
 
   /// Searches [input] for the match found at [index].
   /// Returns `null` if one isn't found.
@@ -181,15 +171,12 @@ class RecursiveRegex implements RegExp {
   /// will be parsed in reverse order. If looking for a match
   /// towards the end of the string, finding it in reverse order
   /// is more efficient. [reverse] must not be `null`.
-  RegExpMatch nthMatch(
+  RegExpMatch? nthMatch(
     int index,
     String input, {
     bool reverse = false,
   }) {
-    assert(index != null && index >= 0);
-    assert(input != null);
-    assert(reverse != null);
-
+    assert(index >= 0);
     return getMatches(input, start: index, stop: index, reverse: false)?.first;
   }
 
@@ -197,21 +184,14 @@ class RecursiveRegex implements RegExp {
   ///
   /// [input]'s delimited blocks of text will be detected in
   /// reverse order, so only the last block will be parsed.
-  RegExpMatch lastMatch(String input) {
-    assert(input != null);
-
-    return getMatches(input, start: 0, stop: 0, reverse: true)?.first;
-  }
+  RegExpMatch? lastMatch(String input) =>
+      getMatches(input, start: 0, stop: 0, reverse: true)?.first;
 
   /// Returns a list of every match found in [input] after [start].
-  ///
-  /// Returns `null` if no matches were found.
   @override
   List<RegExpMatch> allMatches(String input, [int start = 0]) {
-    assert(input != null);
-    assert(start != null && start >= 0);
-
-    return getMatches(input.substring(start));
+    assert(start >= 0);
+    return getMatches(input.substring(start)) ?? <RegExpMatch>[];
   }
 
   /// Returns a list of the matches found in [input].
@@ -229,29 +209,26 @@ class RecursiveRegex implements RegExp {
   /// towards the end of the string, finding it in reverse order
   /// is more efficient. [start] and [stop] will be counted in
   /// the order the matches are closed.
-  List<RegExpMatch> getMatches(
+  List<RegExpMatch>? getMatches(
     String input, {
     int start = 0,
-    int stop,
+    int? stop,
     bool reverse = false,
   }) {
-    assert(input != null);
-    assert(start != null && start >= 0);
+    assert(start >= 0);
     assert(stop == null || stop >= start);
-    assert(reverse != null);
-
-    final matches = <RegExpMatch>[];
-
-    var index = 0;
 
     final delimiters = _getDelimiters(input);
 
     if (delimiters == null) return null;
 
     if (delimiters.length == 2) {
-      if (start != null && start > 1) return null;
+      if (start > 1) return null;
       return regExp.allMatches(input).toList();
     }
+
+    final matches = <RegExpMatch>[];
+    var index = 0;
 
     String getMatch(Match start, Match end) =>
         input.substring(0, start.start).clean() +
@@ -273,7 +250,7 @@ class RecursiveRegex implements RegExp {
           final endDelimiter =
               reverse ? openDelimiters.last.match : delimiter.match;
           final match = getMatch(startDelimiter, endDelimiter);
-          matches.add(regExp.firstMatch(match));
+          matches.add(regExp.firstMatch(match)!);
         }
 
         index++;
@@ -296,18 +273,12 @@ class RecursiveRegex implements RegExp {
   }
 
   @override
-  bool hasMatch(String input) {
-    assert(input != null);
-
-    return regExp.hasMatch(input);
-  }
+  bool hasMatch(String input) => regExp.hasMatch(input);
 
   @override
-  String stringMatch(String input) {
-    assert(input != null);
-
+  String? stringMatch(String input) {
     final match = firstMatch(input);
-
+    if (match == null) return null;
     return input.substring(match.start, match.end);
   }
 
@@ -320,27 +291,19 @@ class RecursiveRegex implements RegExp {
   /// [start] must not be `null` and must be `>= 0`.
   ///
   /// [stop] may be `null` and must be `>= start`.
-  List<String> stringMatches(
+  List<String>? stringMatches(
     String input, {
     int start = 0,
-    int stop,
+    int? stop,
     bool reverse = true,
   }) {
-    assert(input != null);
-    assert(start != null && start >= 0);
+    assert(start >= 0);
     assert(stop == null || stop >= start);
-    assert(reverse != null);
-
-    final matches = getMatches(
-      input,
-      start: start,
-      stop: stop,
-      reverse: reverse,
-    );
-
+    final matches =
+        getMatches(input, start: start, stop: stop, reverse: reverse);
     return matches
         ?.map((match) => input.substring(match.start, match.end))
-        ?.toList();
+        .toList();
   }
 
   /// Match the delimited pattern against the [string] at
@@ -348,10 +311,8 @@ class RecursiveRegex implements RegExp {
   ///
   /// [start] must not be null and must be `>= 0`.
   @override
-  Match matchAsPrefix(String string, [int start = 0]) {
-    assert(string != null);
-    assert(start != null && start >= 0);
-
+  Match? matchAsPrefix(String string, [int start = 0]) {
+    assert(start >= 0);
     return pattern.matchAsPrefix(string, start);
   }
 
@@ -368,20 +329,17 @@ class RecursiveRegex implements RegExp {
   /// If [copyNull] is `true`, [captureGroupName] will be copied with a
   /// value of `null` if it is not provided with another value.
   RecursiveRegex copyWith({
-    RegExp startDelimiter,
-    RegExp endDelimiter,
-    String captureGroupName,
-    bool isMultiLine,
-    bool isCaseSensitive,
-    bool isUnicode,
-    bool isDotAll,
-    bool global,
+    RegExp? startDelimiter,
+    RegExp? endDelimiter,
+    String? captureGroupName,
+    bool? isMultiLine,
+    bool? isCaseSensitive,
+    bool? isUnicode,
+    bool? isDotAll,
+    bool? global,
     bool copyNull = false,
   }) {
-    assert(copyNull != null);
-
     if (!copyNull) captureGroupName ??= this.captureGroupName;
-
     return RecursiveRegex(
       startDelimiter: startDelimiter ?? this.startDelimiter,
       endDelimiter: endDelimiter ?? this.endDelimiter,
@@ -395,9 +353,7 @@ class RecursiveRegex implements RegExp {
   }
 
   // Returns a list of every delimiter in the order of their occurance.
-  List<Delimiter> _getDelimiters(String input) {
-    assert(input != null);
-
+  List<Delimiter>? _getDelimiters(String input) {
     if (!input.contains(startDelimiter)) return null;
 
     var startDelimiters = startDelimiter.allMatches(input).toList();
@@ -436,9 +392,6 @@ class RecursiveRegex implements RegExp {
     List<Delimiter> delimiters, {
     bool appended = false,
   }) {
-    assert(delimiters != null);
-    assert(appended != null);
-
     final unmatchedDelimiters = <Delimiter>[];
     final removeDelimiters = <int>[];
 
@@ -507,15 +460,12 @@ class RecursiveRegex implements RegExp {
 
   /// Returns any matches of [inverseMatch] in [input] that aren't
   /// contained within the matches provided by [delimitedText].
-  List<RegExpMatch> _getInverseMatches(
+  List<RegExpMatch>? _getInverseMatches(
     String input,
     List<RegExpMatch> delimitedText,
   ) {
-    assert(input != null);
-    assert(delimitedText != null);
-
     final regExp = inverseMatch is String
-        ? _escapePattern(inverseMatch)
+        ? _escapePattern(inverseMatch as String)
         : inverseMatch as RegExp;
 
     final allMatches = regExp.allMatches(input).toList();
@@ -537,27 +487,19 @@ class RecursiveRegex implements RegExp {
 
   /// Escapes any regular expression special characters found in [pattern].
   RegExp _escapePattern(String pattern) {
-    assert(pattern != null);
-
     final reservedCharacters = r'\[^$.|?*+()'.split('');
-
     for (var character in reservedCharacters) {
       pattern = pattern.replaceAll(character, '\\$character');
     }
-
     return RegExp(pattern);
   }
 
   /// Returns `true` if [match1] is in the range of [match2].
   bool _matchIsWithin(RegExpMatch match1, RegExpMatch match2) {
-    assert(match1 != null);
-    assert(match2 != null);
-
     if (match1.start >= match2.start && match1.start < match2.end ||
         match1.end > match2.start && match1.end <= match2.end) {
       return true;
     }
-
     return false;
   }
 
@@ -566,6 +508,9 @@ class RecursiveRegex implements RegExp {
       o is RecursiveRegex &&
       startDelimiter == o.startDelimiter &&
       endDelimiter == o.endDelimiter &&
+      inverseMatch == o.inverseMatch &&
+      prepended == o.prepended &&
+      appended == o.appended &&
       captureGroupName == o.captureGroupName &&
       isMultiLine == o.isMultiLine &&
       isCaseSensitive == o.isCaseSensitive &&
@@ -576,6 +521,9 @@ class RecursiveRegex implements RegExp {
   int get hashCode =>
       startDelimiter.hashCode ^
       endDelimiter.hashCode ^
+      inverseMatch.hashCode ^
+      prepended.hashCode ^
+      appended.hashCode ^
       captureGroupName.hashCode ^
       isMultiLine.hashCode ^
       isCaseSensitive.hashCode ^
