@@ -358,6 +358,14 @@ class RecursiveRegex implements RegExp {
     return pattern.matchAsPrefix(string, start);
   }
 
+  /// Returns `true` if [input] starts with `this` pattern,
+  /// otherwise returns `false`.
+  bool startsWith(String input) => firstMatch(input)?.start == 0;
+
+  /// Returns `true` if [input] ends with `this` pattern,
+  /// otherwise returns `false`.
+  bool endsWith(String input) => input.endsWithPattern(this);
+
   /// Returns a copy of [RecursiveRegex], updating any values provided by this.
   ///
   /// If [copyNull] is `true`, [captureGroupName] will be copied with a
