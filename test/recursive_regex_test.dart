@@ -72,4 +72,23 @@ void main() {
     final bothMatches = both.allMatches(input);
     expect(bothMatches.length, equals(2));
   });
+
+  test('Inverse Matches', () {
+    final input =
+        'Object test4 { void update() Test { /* test6 */ false Test { test3 } } test2 } test1 true test5';
+
+    final regex = RecursiveRegex(
+      startDelimiter: '{',
+      endDelimiter: '}',
+      inverseMatch: RegExp('test[1-5]'),
+    );
+
+    final matches = regex.allMatches(input);
+    final expectedMatches = <String>['test4', 'test1', 'test5'];
+
+    for (var match in matches) {
+      expect(input.substring(match.start, match.end),
+          equals(expectedMatches.removeAt(0)));
+    }
+  });
 }

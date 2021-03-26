@@ -12,6 +12,9 @@ class RecursiveRegex implements RegExp {
   /// [startDelimiter] and [endDelimiter] are required, must not be
   /// `null`, and must not be identical to each other.
   ///
+  /// If an [inverseMatch] pattern is provided, only matches that match
+  /// that pattern and aren't delimited will be matched by this regex.
+  ///
   /// If [prepended] and/or [appended] are not `null`, all matched sets
   /// of delimiters will be validated to be preceded and/or followed by
   /// the values of [prepended] and/or [appended] respectively. All matched
@@ -44,6 +47,7 @@ class RecursiveRegex implements RegExp {
   RecursiveRegex({
     @required this.startDelimiter,
     @required this.endDelimiter,
+    this.inverseMatch,
     this.prepended,
     this.appended,
     this.captureGroupName,
@@ -55,7 +59,8 @@ class RecursiveRegex implements RegExp {
   })  : assert(startDelimiter != null),
         assert(endDelimiter != null),
         assert((startDelimiter is String && startDelimiter != endDelimiter) ||
-            (startDelimiter is RegExp && endDelimiter is RegExp &&
+            (startDelimiter is RegExp &&
+                endDelimiter is RegExp &&
                 startDelimiter.pattern != endDelimiter.pattern)),
         assert(captureGroupName == null || captureGroupName.length > 1),
         assert(multiLine != null),
@@ -75,6 +80,10 @@ class RecursiveRegex implements RegExp {
   /// The closing delimiter.
   final Pattern endDelimiter;
   String get _endDelimiter => _getPattern(endDelimiter);
+
+  /// If provided, only matches that match this [Pattern] and aren't
+  /// delimited will be matched by this regex.
+  final Pattern inverseMatch;
 
   /// A [Pattern] expected to precede [startDelimiter].
   ///
@@ -258,7 +267,7 @@ class RecursiveRegex implements RegExp {
         continue;
       }
 
-      if (global || openDelimiters.length == 1) {
+      if (global || inverseMatch != null || openDelimiters.length == 1) {
         if (index >= start && (stop == null || index <= stop)) {
           final startDelimiter =
               (reverse) ? delimiter.match : openDelimiters.last.match;
@@ -278,7 +287,13 @@ class RecursiveRegex implements RegExp {
       openDelimiters.removeLast();
     }
 
-    if (matches.isEmpty) return null;
+    if (inverseMatch != null) {
+      return _getInverseMatches(input, matches);
+    }
+
+    if (matches.isEmpty) {
+      return null;
+    }
 
     return matches;
   }
@@ -481,6 +496,62 @@ class RecursiveRegex implements RegExp {
     }
 
     return delimiters;
+  }
+
+  /// Returns any matches of [inverseMatch] in [input] that aren't
+  /// contained within the matches provided by [delimitedText].
+  List<RegExpMatch> _getInverseMatches(
+    String input,
+    List<RegExpMatch> delimitedText,
+  ) {
+    assert(input != null);
+    assert(delimitedText != null);
+
+    final regExp = inverseMatch is String
+        ? _escapePattern(inverseMatch)
+        : inverseMatch as RegExp;
+
+    final allMatches = regExp.allMatches(input).toList();
+
+    final matches = <RegExpMatch>[];
+
+    for (var match in allMatches) {
+      if (!delimitedText.any((text) => _matchIsWithin(match, text))) {
+        matches.add(match);
+      }
+    }
+
+    if (matches.isEmpty) {
+      return null;
+    }
+
+    return matches;
+  }
+
+  /// Escapes any regular expression special characters found in [pattern].
+  RegExp _escapePattern(String pattern) {
+    assert(pattern != null);
+
+    final reservedCharacters = r'\[^$.|?*+()'.split('');
+
+    for (var character in reservedCharacters) {
+      pattern = pattern.replaceAll(character, '\\$character');
+    }
+
+    return RegExp(pattern);
+  }
+
+  /// Returns `true` if [match1] is in the range of [match2].
+  bool _matchIsWithin(RegExpMatch match1, RegExpMatch match2) {
+    assert(match1 != null);
+    assert(match2 != null);
+
+    if (match1.start >= match2.start && match1.start < match2.end ||
+        match1.end > match2.start && match1.end <= match2.end) {
+      return true;
+    }
+
+    return false;
   }
 
   @override
