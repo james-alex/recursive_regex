@@ -1,3 +1,7 @@
+## [1.0.0] - March 26, 2021
+
+* Migrated to null-safe code.
+
 ## [0.2.0] - March 5, 2021
 
 * [startDelimiter] and [endDelimiter] are now [Pattern]s instead of [RegExp]s,
