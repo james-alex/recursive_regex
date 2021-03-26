@@ -250,7 +250,6 @@ class RecursiveRegex implements RegExp {
 
     if (delimiters.length == 2) {
       if (start != null && start > 1) return null;
-
       return regExp.allMatches(input).toList();
     }
 
@@ -260,7 +259,7 @@ class RecursiveRegex implements RegExp {
 
     final openDelimiters = <Delimiter>[];
 
-    for (var delimiter in (reverse) ? delimiters.reversed : delimiters) {
+    for (var delimiter in reverse ? delimiters.reversed : delimiters) {
       if ((!reverse && delimiter.position == DelimiterPosition.start) ||
           (reverse && delimiter.position == DelimiterPosition.end)) {
         openDelimiters.add(delimiter);
@@ -270,12 +269,10 @@ class RecursiveRegex implements RegExp {
       if (global || inverseMatch != null || openDelimiters.length == 1) {
         if (index >= start && (stop == null || index <= stop)) {
           final startDelimiter =
-              (reverse) ? delimiter.match : openDelimiters.last.match;
+              reverse ? delimiter.match : openDelimiters.last.match;
           final endDelimiter =
-              (reverse) ? openDelimiters.last.match : delimiter.match;
-
+              reverse ? openDelimiters.last.match : delimiter.match;
           final match = getMatch(startDelimiter, endDelimiter);
-
           matches.add(regExp.firstMatch(match));
         }
 
@@ -480,9 +477,9 @@ class RecursiveRegex implements RegExp {
               break;
             }
           }
+        } else {
           // Otherwise, queue the delimiter and it's corresponding
           // start/end delimiter to be removed after the loop.
-        } else {
           unmatchedDelimiters.add(delimiter);
           removeDelimiters.add(0);
         }
