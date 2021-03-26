@@ -476,7 +476,8 @@ class RecursiveRegex implements RegExp {
 
           for (var match in matches) {
             if (appended ? match.start == position : match.end == position) {
-              delimiters[delimiters.indexOf(delimiter)].match = match;              break;
+              delimiters[delimiters.indexOf(delimiter)].match = match;
+              break;
             }
           }
           // Otherwise, queue the delimiter and it's corresponding
